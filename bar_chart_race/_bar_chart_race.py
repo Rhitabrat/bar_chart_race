@@ -53,7 +53,10 @@ class _BarChartRace(CommonChart):
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
                  tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
                  bar_kwargs, fig_kwargs, filter_column_colors, 
-                 img_label_folder,tick_label_mode,tick_image_mode):
+                 img_label_folder,tick_label_mode,tick_image_mode,bar_label_position,fps):
+        self.fps = fps
+        self.bar_label_position = bar_label_position
+        
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -78,7 +81,7 @@ class _BarChartRace(CommonChart):
         self.tick_template = self.get_tick_template(tick_template)
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
-        self.fps = 1000 / self.period_length * steps_per_period
+        # self.fps = 1000 / self.period_length * steps_per_period
         self.writer = self.get_writer(writer)
         self.filter_column_colors = filter_column_colors
         self.extra_pixels = 2
@@ -98,6 +101,8 @@ class _BarChartRace(CommonChart):
         self.tick_label_mode = tick_label_mode
         self.tick_image_mode = tick_image_mode
         self.img_label_artist = []     #stores image artists
+
+        
 
 
     def validate_params(self):
@@ -253,14 +258,13 @@ class _BarChartRace(CommonChart):
         #renderer = self.fig.canvas.renderer
         #_,_,img_width,img_height = im.get_window_extent(renderer=None)
         #print(im.get_data())
-        # img_width  = 30
-        # img_height = 30
+        img_width  = 30
+        img_height = 30
 
         if self.tick_image_mode=='trailing':     #images move along with the bar
             if self.orientation=='h':
                 #len_bar = (img_width/2) + 2 if length < img_width else length - (img_width/2) - 2
                 len_bar = length
-                # xybox_val = (-38,0) if length < 30 else (-38,0)
                 xybox_val = (38,0)
                 ab = AnnotationBbox(im,(len_bar,location,),xybox=xybox_val,frameon=False,xycoords='data',
                                     boxcoords='offset points',pad=0)
@@ -516,7 +520,7 @@ class _BarChartRace(CommonChart):
                 max_bar = bar_length.max()
                 new_max_pixels = ax.transData.transform((max_bar, 0))[0] + self.extra_pixels
                 new_xmax = ax.transData.inverted().transform((new_max_pixels, 0))[0]
-                ax.set_xlim(ax.get_xlim()[0] , new_xmax)
+                ax.set_xlim(ax.get_xlim()[0] , new_xmax+10)
         else:
             ax.bar(bar_location, bar_length, tick_label=cols, 
                    color=colors, **self.bar_kwargs)
@@ -574,7 +578,7 @@ class _BarChartRace(CommonChart):
             else:
                 zipped = zip(bar_location, bar_length)
 
-            delta = .05 if self.bar_textposition == 'outside' else -.008
+            delta = self.bar_label_position
 
             text_objs = []
             for x1, y1 in zipped:
@@ -693,7 +697,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}'+'%',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
                    fig_kwargs=None, filter_column_colors=False,
-                   img_label_folder=None,tick_label_mode='image',tick_image_mode='trailing'):
+                   img_label_folder=None,tick_label_mode='image',tick_image_mode='trailing',
+                   bar_label_position=0.05,fps=30):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -1073,5 +1078,5 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         colors, title, bar_size, bar_textposition, bar_texttemplate, 
                         bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
                         fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, 
-                        img_label_folder,tick_label_mode,tick_image_mode)
+                        img_label_folder, tick_label_mode, tick_image_mode, bar_label_position, fps)
     return bcr.make_animation()
